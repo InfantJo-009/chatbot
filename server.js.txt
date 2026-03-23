@@ -1,0 +1,64 @@
+// server.js
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config(); // Loads .env file locally
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors()); // Allow requests from frontend
+app.use(express.json()); // Parse JSON bodies
+app.use(express.static('public')); // Serve the 'public' folder
+
+// The API Key is now stored securely on the server
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL_ID = 'llama-3.3-70b-versatile';
+
+// Endpoint for chat
+app.post('/chat', async (req, res) => {
+    const userMessage = req.body.message;
+
+    if (!userMessage) {
+        return res.status(400).json({ error: "Message is required" });
+    }
+
+    if (!GROQ_API_KEY) {
+        return res.status(500).json({ error: "API Key not configured on server." });
+    }
+
+    try {
+        const response = await fetch(GROQ_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messages: [{ role: "user", content: userMessage }],
+                model: MODEL_ID
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            console.error("Groq Error:", data.error);
+            return res.status(400).json({ error: data.error.message });
+        }
+
+        // Send the bot's reply back to the frontend
+        res.json({ reply: data.choices[0].message.content });
+
+    } catch (error) {
+        console.error("Server Error:", error);
+        res.status(500).json({ error: "Failed to connect to AI service." });
+    }
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

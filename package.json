@@ -1,1 +1,13 @@
-<script src='https://www.noupe.com/embed/019ce1a02dfd723d95f231b15d1813325c17.js'></script>
+{
+  "name": "groq-chat-app",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
+  }
+}
